@@ -1,6 +1,7 @@
 import torch
+from sklearn.model_selection import train_test_split
 from torchvision import transforms
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import os
 from PIL import Image
 
@@ -23,30 +24,30 @@ class RGBDDataset(Dataset):
                 self.rgb_images.append(rgb_path)
                 self.depth_images.append(depth_path)
 
-        train_data, test_data, _, _ = train_test_split(
+        train_data, test_data = train_test_split(
             list(range(len(self.rgb_images))),
             test_size=test_size,
             random_state=42
         )
-        train_data, val_data, _, _ = train_test_split(
+        train_data, val_data = train_test_split(
             train_data,
             test_size=val_size / (1 - test_size),
             random_state=42
         )
 
-    if split == 'train':
-        self.rgb_images = [self.rgb_images[i] for i in train_data]
-        self.depth_images = [self.depth_images[i] for i in train_data]
-    elif split == 'val':
-        self.rgb_images = [self.rgb_images[i] for i in val_data]
-        self.depth_images = [self.depth_images[i] for i in val_data]
-    elif split == 'test':
-        self.rgb_images = [self.rgb_images[i] for i in test_data]
-        self.depth_images = [self.depth_images[i] for i in test_data]
-    else:
-        raise ValueError("Invalid split value. Use 'train', 'val', or 'test'.")
+        if split == 'train':
+            self.rgb_images = [self.rgb_images[i] for i in train_data]
+            self.depth_images = [self.depth_images[i] for i in train_data]
+        elif split == 'val':
+            self.rgb_images = [self.rgb_images[i] for i in val_data]
+            self.depth_images = [self.depth_images[i] for i in val_data]
+        elif split == 'test':
+            self.rgb_images = [self.rgb_images[i] for i in test_data]
+            self.depth_images = [self.depth_images[i] for i in test_data]
+        else:
+            raise ValueError("Invalid split value. Use 'train', 'val', or 'test'.")
 
-    assert len(self.rgb_images) == len(self.depth_images)
+        assert len(self.rgb_images) == len(self.depth_images)
 
     def __len__(self):
         return len(self.rgb_images)
@@ -66,7 +67,7 @@ class RGBDDataset(Dataset):
         return rgb_image, depth_image
 
 
-def get_data_loaders(root_dir, batch_size):
+def get_data_loaders(root_dir, batch_size, test_size=0.2, val_size=0.1):
     rgb_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Resize((64, 64)),

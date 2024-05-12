@@ -77,17 +77,18 @@ def parse_args():
     parser.add_argument('--num_epochs', type=int, default=100, help='Number of training epochs')
     parser.add_argument('--learning_rate', type=float, default=0.0002, help='Learning rate for optimizers')
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'], help='Device to use for training')
+    parser.add_argument('--attention', type=bool, default=True, help='Use attention layers in the GAN')
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
 
     device = torch.device(args.device)
-    data_loader = get_data_loaders(args.root_dir, args.batch_size)
+    train_loader, val_loader, _ = get_data_loaders(args.root_dir, args.batch_size)
 
     # Initialize models
-    generator = Generator(noise_dim=100, attention=True).to(device)
-    discriminator = Discriminator(attention=True).to(device)
+    generator = Generator(noise_dim=100, attention=args.attention).to(device)
+    discriminator = Discriminator(attention=args.attention).to(device)
 
     loss_fn = GANLoss()
     optimizer_g = torch.optim.Adam(generator.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
