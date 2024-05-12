@@ -59,11 +59,14 @@ def train(train_loader, val_loader, generator, discriminator, loss_fn, optimizer
                 generator_loss = loss_fn(fake_output, True)
                 val_loss_g += generator_loss.item()
 
+
         # Compute average losses
         train_loss_g /= len(train_loader)
         train_loss_d /= len(train_loader)
         val_loss_g /= len(val_loader)
         val_loss_d /= len(val_loader)
+
+        generate_images(generator, 25, device, epoch)
 
         print(f"Epoch [{epoch + 1}/{num_epochs}] "
               f"Train - Generator Loss: {train_loss_g:.4f}, Discriminator Loss: {train_loss_d:.4f} "
