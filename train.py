@@ -14,6 +14,7 @@ def train(data_loader, generator, discriminator, loss_fn, optimizer_g, optimizer
             rgb_images = rgb_images.to(device)
             depth_images = depth_images.to(device)
 
+            # if (epoch+1)%5==0:
             optimizer_d.zero_grad()
             noise = torch.randn(rgb_images.size(0), 100, 1, 1).to(device)
             generated_images = generator(rgb_images, depth_images, noise).to(device)
@@ -23,6 +24,7 @@ def train(data_loader, generator, discriminator, loss_fn, optimizer_g, optimizer
             discriminator_loss.backward()
             optimizer_d.step()
 
+
             optimizer_g.zero_grad()
             noise = torch.randn(rgb_images.size(0), 100, 1, 1).to(device)
             generated_images = generator(rgb_images, depth_images, noise)
@@ -31,10 +33,12 @@ def train(data_loader, generator, discriminator, loss_fn, optimizer_g, optimizer
             generator_loss.backward()
             optimizer_g.step()
 
+        print(f"Epoch [{epoch + 1}/{num_epochs}] Generator Loss: {generator_loss.item()} ")
+        # if (epoch+1)%5==0:
+        print(f"Discriminator Loss: {discriminator_loss.item()}")
 
-        print(f"Epoch [{epoch+1}/{num_epochs}] Generator Loss: {generator_loss.item()} Discriminator Loss: {discriminator_loss.item()}")
         if (epoch + 1) % 10 == 0:
-            generate_images(generator, 25, device)
+            generate_images(generator, 25, device, epoch+1)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -57,6 +61,6 @@ if __name__ == '__main__':
 
     loss_fn = GANLoss()
     optimizer_g = torch.optim.Adam(generator.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
-    optimizer_d = torch.optim.Adam(discriminator.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
+    optimizer_d = torch.optim.SGD(generator.parameters(), lr=args.learning_rate) # betas=(0.5, 0.999))
 
     train(data_loader, generator, discriminator, loss_fn, optimizer_g, optimizer_d, device, args.num_epochs)
