@@ -5,7 +5,7 @@ import os
 from PIL import Image
 
 class RGBDDataset(Dataset):
-    def __init__(self,  root_dir, rgb_transform=None, depth_transform=None):
+    def __init__(self,  root_dir, split='train', rgb_transform=None, depth_transform=None, test_size=0.2, val_size=0.1):
         self.root_dir = root_dir
         self.rgb_transform = rgb_transform
         self.depth_transform = depth_transform
@@ -22,6 +22,31 @@ class RGBDDataset(Dataset):
 
                 self.rgb_images.append(rgb_path)
                 self.depth_images.append(depth_path)
+
+        train_data, test_data, _, _ = train_test_split(
+            list(range(len(self.rgb_images))),
+            test_size=test_size,
+            random_state=42
+        )
+        train_data, val_data, _, _ = train_test_split(
+            train_data,
+            test_size=val_size / (1 - test_size),
+            random_state=42
+        )
+
+    if split == 'train':
+        self.rgb_images = [self.rgb_images[i] for i in train_data]
+        self.depth_images = [self.depth_images[i] for i in train_data]
+    elif split == 'val':
+        self.rgb_images = [self.rgb_images[i] for i in val_data]
+        self.depth_images = [self.depth_images[i] for i in val_data]
+    elif split == 'test':
+        self.rgb_images = [self.rgb_images[i] for i in test_data]
+        self.depth_images = [self.depth_images[i] for i in test_data]
+    else:
+        raise ValueError("Invalid split value. Use 'train', 'val', or 'test'.")
+
+    assert len(self.rgb_images) == len(self.depth_images)
 
     def __len__(self):
         return len(self.rgb_images)
@@ -54,7 +79,16 @@ def get_data_loaders(root_dir, batch_size):
         transforms.Normalize((0.5), (0.5))
     ])
 
-    dataset = RGBDDataset(root_dir, rgb_transform=rgb_transform, depth_transform=depth_transform)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    train_dataset = RGBDDataset(root_dir, split='train', rgb_transform=rgb_transform, depth_transform=depth_transform,
+                                test_size=test_size, val_size=val_size)
+    val_dataset = RGBDDataset(root_dir, split='val', rgb_transform=rgb_transform, depth_transform=depth_transform,
+                              test_size=test_size, val_size=val_size)
+    test_dataset = RGBDDataset(root_dir, split='test', rgb_transform=rgb_transform, depth_transform=depth_transform,
+                               test_size=test_size, val_size=val_size)
 
-    return data_loader
+    # Create data loaders for train, val, and test sets
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader, test_loader
