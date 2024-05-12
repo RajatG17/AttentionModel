@@ -70,13 +70,13 @@ class RGBDDataset(Dataset):
 def get_data_loaders(root_dir, batch_size, test_size=0.2, val_size=0.1):
     rgb_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((64, 64)),
+        transforms.Resize((128, 128)),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
     depth_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((64, 64)),
+        transforms.Resize((128, 128)),
         transforms.Normalize((0.5), (0.5))
     ])
 
