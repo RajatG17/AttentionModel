@@ -18,6 +18,10 @@ class Generator(nn.Module):
             nn.Conv2d(128, 128, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
+            SelfAttention(128) if attention else nn.Identity(),
+            nn.Conv2d(128, 128, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
         )
 
         self.depth_encoder = nn.Sequential(
@@ -30,22 +34,27 @@ class Generator(nn.Module):
             nn.Conv2d(128, 128, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
+            SelfAttention(128) if attention else nn.Identity(),
+            nn.Conv2d(128, 128, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
         )
 
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(256+noise_dim, 128, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(128),
+            nn.ConvTranspose2d(256+noise_dim, 256, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(True),
-            SelfAttention(128) if attention else nn.Identity(),
+            SelfAttention(256) if attention else nn.Identity(),
             # nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),
             # nn.BatchNorm2d(256),
             # nn.ReLU(True),
-            # nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
-            # nn.BatchNorm2d(128),
-            # nn.ReLU(True),
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
             nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(True),
+            SelfAttention(64) if attention else nn.Identity(),
             nn.ConvTranspose2d(64, 3, kernel_size=4, stride=2, padding=1),
             nn.Tanh(),
         )
