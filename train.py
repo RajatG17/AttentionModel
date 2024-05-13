@@ -31,8 +31,8 @@ def train(train_loader, val_loader, generator, discriminator, loss_fn, optimizer
 
             optimizer_g.zero_grad()
             noise = torch.randn(rgb_images.size(0), 100, 1, 1).to(device)
-            generated_images = generator(rgb_images, depth_images, noise)
-            fake_output = discriminator(rgb_images, depth_images, generated_images)
+            generated_images = generator(rgb_images, depth_images, noise).to(device)
+            fake_output = discriminator(rgb_images, depth_images, generated_images.detach()).to(device)
             generator_loss = loss_fn(fake_output, True)
             generator_loss.backward()
             optimizer_g.step()
@@ -95,6 +95,6 @@ if __name__ == '__main__':
 
     loss_fn = GANLoss()
     optimizer_g = torch.optim.Adam(generator.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
-    optimizer_d = torch.optim.SGD(generator.parameters(), lr=args.learning_rate) # betas=(0.5, 0.999))
+    optimizer_d = torch.optim.Adam(generator.parameters(), lr=args.learning_rate, betas=(0.5, 0.999))
 
     train(train_loader, val_loader, generator, discriminator, loss_fn, optimizer_g, optimizer_d, device, args.num_epochs)
